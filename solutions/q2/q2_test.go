@@ -22,7 +22,7 @@ func sanitizeInput(b []byte) ([]string, []string, string) {
 	words := strings.Split(string(a1[:firstHalf]), ",")
 	sentence := a1[firstHalf:]
 	// return words, strings.ReplaceAll(strings.TrimSpace(string(sentence)), " ", "")
-	return words, strings.Split(string(sentence), " "), string(sentence)
+	return words, strings.Split(string(sentence), " "), strings.TrimSpace(string(sentence))
 }
 
 func reverse(s string) string {
@@ -40,7 +40,8 @@ func solve(t *testing.T, r io.Reader) int {
 
 	var numEngravings int
 
-	words, runes, sentence := sanitizeInput(b)
+	words, _, sentence := sanitizeInput(b)
+	indexScoreM := make(map[int]int, len(sentence))
 	// WORD: THI
 	// THIS IS A SENTENCE
 	// 10-7 < 3
@@ -54,20 +55,24 @@ func solve(t *testing.T, r io.Reader) int {
 		rev := reverse(word)
 		warr := []string{origin, string(rev)}
 
-		// for j := 0; j < len(sentence)-len(word); j++ {
-		for j := 0; j < len(runes); j++ {
-			for n := 0; n < len(runes[j]); n++ {
-				for _, w := range warr {
-					delta := j + len(word)
-					curr := runes[j:delta]
-					if w == curr {
-						fmt.Printf("matched %s at idx %d-%d \n", w, j, delta)
-						numEngravings += len(curr)
-						break
+		for j := 0; j < len(sentence)-len(word); j++ {
+			for _, w := range warr {
+				delta := j + len(word)
+				curr := sentence[j:delta]
+				if w == curr {
+					fmt.Printf("matched %s at idx %d-%d \n", w, j, delta)
+					// numEngravings += len(curr)
+					for k := j; k < delta; k++ {
+						indexScoreM[k] = 1
 					}
+					break
 				}
 			}
 		}
+	}
+
+	for _, v := range indexScoreM {
+		numEngravings += v
 	}
 
 	return numEngravings
@@ -75,23 +80,24 @@ func solve(t *testing.T, r io.Reader) int {
 
 func TestSolveP2(t *testing.T) {
 	t.Run("Ex", func(t *testing.T) {
-		// 		in := `WORDS:THE,OWE,MES,ROD,HER
-
-		// AWAKEN THE POWE ADORNED WITH THE FLAMES BRIGHT IRE
-		// THE FLAME SHIELDED THE HEART OF THE KINGS
-		// POWE PO WER P OWE R
-		// THERE IS THE END`
 		in := `WORDS:THE,OWE,MES,ROD,HER
 
-THERE IS THE END`
-		wants := []int{15, 9, 6, 7}
+		AWAKEN THE POWE ADORNED WITH THE FLAMES BRIGHT IRE
+		THE FLAME SHIELDED THE HEART OF THE KINGS
+		POWE PO WER P OWE R
+		THERE IS THE END`
+		// in := `WORDS:THE,OWE,MES,ROD,HER
+
+		// THERE IS THE END`
+		// wants := []int{15, 9, 6, 7}
 		got := solve(t, strings.NewReader(in))
-		assert.Equal(t, wants[3], got)
+		// assert.Equal(t, wants[3], got)
+		assert.Equal(t, 37, got)
 	})
-	// t.Run("Real", func(t *testing.T) {
-	// 	f := files.MustOpen(t, "./q2_p1.txt")
-	// 	spew.Dump(solve(t, f))
-	// })
+	t.Run("Real", func(t *testing.T) {
+		f := files.MustOpen(t, "./q2_p2.txt")
+		spew.Dump(solve(t, f))
+	})
 }
 
 func TestSolveP1(t *testing.T) {
